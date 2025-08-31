@@ -4,32 +4,32 @@
 <h2 class="mb-4">CTF Challenges</h2>
 
 {% if session.get('user_id') %}
-    <p>Welcome, <strong>{{ session.get('username') }}</strong>! Solve the challenges and submit your flags below.</p>
+<p>Welcome, <strong>{{ session.get('username') }}</strong>! Solve the challenges and submit your flags below.</p>
 
-    <div class="row">
-        {% for question in questions %}
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">{{ question.title }}</h5>
-                    <p class="card-text">{{ question.description }}</p>
+<div class="row">
+    {% for question in questions %}
+    <div class="col-12 col-md-10 mx-auto">
+        <div class="card">
+            <div class="card-body">
+                <p class="card-text"><strong>{{ loop.index }}.</strong> {{ question.description }}</p>
 
-                    <form method="POST" action="{{ url_for('submit_flag', question_id=question.id) }}">
-                        <div class="mb-3">
-                            <input type="text" name="flag" class="form-control" placeholder="Enter your flag" required>
-                        </div>
-                        <button type="submit" class="btn btn-submit">Submit Flag</button>
-                    </form>
+                <form method="POST" action="{{ url_for('submit_flag', question_id=question.id) }}">
+                    <div class="d-flex gap-2 align-items-center">
+                        <input type="text" name="flag" class="form-control flag-input flex-grow-1"
+                            placeholder="Enter your flag" autocomplete="off" required>
+                        <button type="submit" class="btn-submit wide-btn">Submit Flag</button>
+                    </div>
+                </form>
 
-                    {% if question.feedback %}
-                        <p class="mt-2 text-{{ question.feedback_class }}">{{ question.feedback }}</p>
-                    {% endif %}
-                </div>
+                {% if question.feedback %}
+                <p class="mt-2 text-{{ question.feedback_class }}">{{ question.feedback }}</p>
+                {% endif %}
             </div>
         </div>
-        {% endfor %}
     </div>
+    {% endfor %}
+</div>
 {% else %}
-    <p>Please <a href="{{ url_for('login') }}">login</a> to view and submit challenges.</p>
+<p>Please <a href="{{ url_for('login') }}">login</a> to view and submit challenges.</p>
 {% endif %}
 {% endblock %}

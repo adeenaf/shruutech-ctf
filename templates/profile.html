@@ -1,0 +1,72 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<h2 class="mb-4">Profile</h2>
+
+{% if session.get('user_id') %}
+<div class="row">
+    <div class="col-12 col-md-6 mx-auto">
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Username: {{ user.username }}</h5>
+                <p class="card-text">Email: {{ user.email }}</p>
+                <p class="card-text">Total Score: {{ user.total_score }}</p>
+                <p class="card-text">Challenges Solved: {{ user.challenges_solved|length }}</p>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Solved Challenges</h5>
+                {% if user.challenges_solved %}
+                <table>
+                    <tbody>
+                        {% for challenge in user.challenges_solved %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>{{ challenge.title }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <p class="card-text">You haven't solved any challenges yet.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Submission History</h5>
+                {% if user.submissions %}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Challenge</th>
+                            <th>Submitted Flag</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for submission in user.submissions %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>{{ submission.challenge_title }}</td>
+                            <td>{{ submission.flag }}</td>
+                            <td>{{ submission.status }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <p class="card-text">No submissions yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% else %}
+<p>Please <a href="{{ url_for('login') }}">login</a> to view your profile.</p>
+{% endif %}
+{% endblock %}

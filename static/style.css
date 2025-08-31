@@ -1,25 +1,130 @@
 body {
-    background-color: #f8f9fa;
+    background-color: #0c111f;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #ed9e6f;
+}
+
+.navbar {
+    background-color: #2d1f44;
 }
 
 .navbar-brand {
-    font-weight: bold;
-    font-size: 1.5rem;
+    font-family: 'Sinoreta PERSONAL USE', sans-serif;
+    font-weight: 500;
+    font-size: 1.6rem;
+    color: #ed9e6f;
+}
+
+.nav-link {
+    color: #b66570 !important;
+    transition: color 0.3s;
+}
+
+.nav-link:hover {
+    color: #ed9e6f !important;
 }
 
 .card {
-    margin-bottom: 1rem;
-    border-radius: 0.5rem;
-    box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    margin-bottom: 0.3rem;
+    box-shadow: 0 0 5px rgba(80, 70, 110, 0.6);
+    background-color: #512f5c;
+    color: #ed9e6f;
+    padding: 0 0.5rem 0 0;
+    font-size: 1rem;
+}
+
+.card p {
+    color: #ed9e6f;
+    margin-bottom: 0.25rem;
+    font-size: 1rem;
+}
+
+.flag-input {
+    padding: 0.35rem;
+    font-size: 1rem;
+    height: 2rem; 
+}
+
+.btn-submit.wide-btn {
+    min-width: 150px;
+    padding: 0.3rem 1rem;
+    font-size: 0.85rem;
 }
 
 .btn-submit {
-    background-color: #0d6efd;
-    color: #fff;
-    transition: background-color 0.3s;
+    background-color: #b66570;
+    color: #0c111f;
+    font-weight: bold;
+    border: None;
+    padding: 0.4rem 0.8rem;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.2s;
 }
 
 .btn-submit:hover {
-    background-color: #0b5ed7;
+    background-color: #ed9e6f;
+    color: #0c111f;
 }
+
+input[type="text"],
+input[type="password"] {
+    background-color: #2d1f44;
+    border: 1px solid #80466e;
+    color: #ed9e6f;
+    padding: 0.5rem;
+    border-radius: 0.25rem;
+}
+
+input[type="text"]:focus,
+input[type="password"]:focus {
+    background-color: #80466e;
+    color: #ed9e6f;
+    outline: none;
+    border-color: #b66570;
+    box-shadow: 0 0 5px #b66570;
+}
+
+.flash {
+    background-color: #80466e;
+    color: #f7c9af;
+    padding: 0.5rem 0.5rem;
+    border-radius: 0.25rem;
+    margin-bottom: 0.75rem;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+    background-color: #2d1f44;
+    color: #ed9e6f;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    box-shadow: 0 0 10px rgba(80, 70, 110, 0.6);
+}
+
+table th, table td {
+    padding: 0.75rem 1rem;
+    text-align: left;
+}
+
+table thead {
+    background-color: #512f5c;
+    color: #ed9e6f;
+    font-size: 1.2rem;
+    font-family: 'Sinoreta PERSONAL USE', sans-serif;
+}
+
+table tbody tr:nth-child(odd) {
+    background-color: #2d1f44;
+}
+
+table tbody tr:nth-child(even) {
+    background-color: #0c111f;
+}
+
+table th {
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
