@@ -11,9 +11,19 @@
                 {{ form.username.label(class="form-label") }}
                 {{ form.username(class="form-control", id="username", placeholder="Enter username") }}
                 {% if form.username.errors %}
-                    <div class="text-danger mt-1">
-                        {{ form.username.errors[0] }}
-                    </div>
+                <div class="text-danger mt-1">
+                    {{ form.username.errors[0] }}
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="mb-3">
+                {{ form.email.label(class="form-label") }}
+                {{ form.email(class="form-control", id="email", placeholder="Enter email") }}
+                {% if form.email.errors %}
+                <div class="text-danger mt-1">
+                    {{ form.email.errors[0] }}
+                </div>
                 {% endif %}
             </div>
 
@@ -21,9 +31,9 @@
                 {{ form.password.label(class="form-label") }}
                 {{ form.password(class="form-control", id="password", placeholder="Enter password") }}
                 {% if form.password.errors %}
-                    <div class="text-danger mt-1">
-                        {{ form.password.errors[0] }}
-                    </div>
+                <div class="text-danger mt-1">
+                    {{ form.password.errors[0] }}
+                </div>
                 {% endif %}
             </div>
 
@@ -31,9 +41,9 @@
                 {{ form.confirm_password.label(class="form-label") }}
                 {{ form.confirm_password(class="form-control", id="confirm_password", placeholder="Confirm password") }}
                 {% if form.confirm_password.errors %}
-                    <div class="text-danger mt-1">
-                        {{ form.confirm_password.errors[0] }}
-                    </div>
+                <div class="text-danger mt-1">
+                    {{ form.confirm_password.errors[0] }}
+                </div>
                 {% endif %}
             </div>
 
