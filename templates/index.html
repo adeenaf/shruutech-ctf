@@ -26,8 +26,9 @@
                     <div class="d-flex gap-2 align-items-center">
                         <input type="text" name="flag" class="form-control flag-input flex-grow-1"
                             placeholder="Enter your flag" autocomplete="off" required>
-                        <button type="submit" class="btn-submit wide-btn" {% if question.solved %}disabled{% endif %}>
-                            Submit Flag
+                        <button type="submit" class="btn-submit wide-btn" {% if question.solved %}disabled
+                            style="background-color: #4caf50; color: #0c111f;" {% endif %}>
+                            {% if question.solved %}Correct Answer{% else %}Submit Flag{% endif %}
                         </button>
                     </div>
                 </form>
