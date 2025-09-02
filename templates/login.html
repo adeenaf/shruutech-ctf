@@ -5,16 +5,29 @@
     <div class="col-md-6">
         <h2 class="mb-4">Login</h2>
         <form method="post">
-            {{ csrf_token() }}
+            {{ form.hidden_tag() }}
+
             <div class="mb-3">
-                <label for="username" class="form-label">Username</label>
-                <input type="text" class="form-control" id="username" name="username" required>
+                {{ form.username.label(class="form-label") }}
+                {{ form.username(class="form-control", id="username", placeholder="Enter username") }}
+                {% if form.username.errors %}
+                    <div class="text-danger mt-1">
+                        {{ form.username.errors[0] }}
+                    </div>
+                {% endif %}
             </div>
+
             <div class="mb-3">
-                <label for="password" class="form-label">Password</label>
-                <input type="password" class="form-control" id="password" name="password" required>
+                {{ form.password.label(class="form-label") }}
+                {{ form.password(class="form-control", id="password", placeholder="Enter password") }}
+                {% if form.password.errors %}
+                    <div class="text-danger mt-1">
+                        {{ form.password.errors[0] }}
+                    </div>
+                {% endif %}
             </div>
-            <button type="submit" class="btn-submit">Login</button>
+
+            {{ form.submit(class="btn-submit") }}
         </form>
     </div>
 </div>

@@ -12,6 +12,10 @@
                 <p class="card-text">Email: {{ user.email }}</p>
                 <p class="card-text">Total Score: {{ user.total_score }}</p>
                 <p class="card-text">Challenges Solved: {{ user.challenges_solved|length }}</p>
+
+                <a href="{{ url_for('change_password') }}" class="btn btn-warning mt-2">
+                    Change Password
+                </a>
             </div>
         </div>
 

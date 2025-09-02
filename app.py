@@ -26,6 +26,12 @@ class ChangePasswordForm(FlaskForm):
     confirm_password = PasswordField("Confirm New Password", validators=[DataRequired(), EqualTo('new_password', message="Passwords must match")])
     submit = SubmitField("Change Password")
 
+class RegisterForm(FlaskForm):
+    username = StringField("Username", validators=[DataRequired(), Length(1, 50)])
+    password = PasswordField("Password", validators=[DataRequired(), Length(6, 128)])
+    confirm_password = PasswordField("Confirm Password", validators=[DataRequired(), EqualTo('password', message="Passwords must match")])
+    submit = SubmitField("Register")
+
 def get_db():
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
@@ -73,13 +79,15 @@ def index():
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
+    """
     flash("Registration is closed.", "warning")
     return redirect(url_for("login"))
+    """
 
-    if request.method == "POST":
-        username = request.form.get("username")
-        password = request.form.get("password")
-
+    form = RegisterForm()
+    if form.validate_on_submit():
+        username = form.username.data
+        password = form.password.data
         password_hash = generate_password_hash(password)
 
         conn = get_db()
@@ -89,13 +97,15 @@ def register():
             (username, password_hash)
         )
         conn.commit()
+        user_id = cursor.lastrowid
         conn.close()
 
-        session["user_id"] = cursor.lastrowid
+        session["user_id"] = user_id
         session["username"] = username
-
+        flash("Registration successful!", "success")
         return redirect(url_for("index"))
-    return render_template("register.html")
+
+    return render_template("register.html", form=form)
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -104,8 +114,7 @@ def login():
         username = form.username.data
         password = form.password.data
 
-        conn = sqlite3.connect(DB_PATH)
-        conn.row_factory = sqlite3.Row
+        conn = get_db()
         cursor = conn.cursor()
         cursor.execute("SELECT id, password_hash FROM users WHERE username=?", (username,))
         user = cursor.fetchone()
@@ -179,6 +188,9 @@ def profile():
         flash("User not found.", "danger")
         return redirect(url_for("index"))
 
+    # Use dict() to convert sqlite3.Row to a dict
+    user_row_dict = dict(user_row)
+
     cursor.execute("""
         SELECT c.id, c.title 
         FROM challenges c
@@ -200,9 +212,9 @@ def profile():
     conn.close()
 
     user = {
-        "username": user_row["username"],
-        "email": user_row.get("email", "user@example.com"),
-        "total_score": user_row["total_score"],
+        "username": user_row_dict["username"],
+        "email": user_row_dict.get("email") or "user@example.com",
+        "total_score": user_row_dict["total_score"],
         "challenges_solved": challenges_solved,
         "submissions": submissions
     }

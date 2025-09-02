@@ -21,17 +21,16 @@
                 <p class="challenge-hint">Hint: {{ question.hint }}</p>
 
                 <form class="flag-form" data-challenge-id="{{ question.id }}">
-                    {{ csrf_token() }}
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <div class="d-flex gap-2 align-items-center">
                         <input type="password" name="flag" class="form-control flag-input flex-grow-1"
-                               placeholder="Enter your flag" autocomplete="off" required>
-                        <button type="submit" class="btn-submit wide-btn" 
-                                {% if question.solved %}disabled style="background-color: #4caf50; color: #0c111f;"{% endif %}>
+                            placeholder="Enter your flag" autocomplete="off" required>
+                        <button type="submit" class="btn-submit wide-btn" {% if question.solved %}disabled
+                            style="background-color: #4caf50; color: #0c111f;" {% endif %}>
                             {% if question.solved %}Correct Answer{% else %}Submit Flag{% endif %}
                         </button>
                     </div>
                 </form>
-
             </div>
         </div>
     </div>
@@ -39,51 +38,51 @@
 </div>
 
 <script>
-document.addEventListener("DOMContentLoaded", () => {
-    const forms = document.querySelectorAll('.flag-form');
+    document.addEventListener("DOMContentLoaded", () => {
+        const forms = document.querySelectorAll('.flag-form');
 
-    forms.forEach(form => {
-        form.addEventListener('submit', async e => {
-            e.preventDefault();
-            const button = form.querySelector('button[type="submit"]');
-            const input = form.querySelector('input[name="flag"]');
-            const challengeId = form.dataset.challengeId;
-            const csrfToken = form.querySelector('input[name="csrf_token"]').value;
+        forms.forEach(form => {
+            form.addEventListener('submit', async e => {
+                e.preventDefault();
+                const button = form.querySelector('button[type="submit"]');
+                const input = form.querySelector('input[name="flag"]');
+                const challengeId = form.dataset.challengeId;
+                const csrfToken = form.querySelector('input[name="csrf_token"]').value;
 
-            const formData = new FormData();
-            formData.append("flag", input.value);
-            formData.append("csrf_token", csrfToken);
+                const formData = new FormData();
+                formData.append("flag", input.value);
+                formData.append("csrf_token", csrfToken);
 
-            try {
-                const res = await fetch(`/submit_flag/${challengeId}`, {
-                    method: "POST",
-                    body: formData
-                });
-                const data = await res.json();
+                try {
+                    const res = await fetch(`/submit_flag/${challengeId}`, {
+                        method: "POST",
+                        body: formData
+                    });
+                    const data = await res.json();
 
-                if (data.status === "Correct") {
-                    button.textContent = "Correct Answer";
-                    button.style.backgroundColor = "#4caf50";
-                    button.disabled = true;
-                } else if (data.status === "Incorrect") {
-                    button.textContent = "Try Again";
-                    button.style.backgroundColor = "#dc3545";
-                    setTimeout(() => {
-                        button.textContent = "Submit Flag";
-                        button.style.backgroundColor = "";
-                    }, 3000);
-                } else if (data.status === "already_solved") {
-                    button.textContent = "Already Solved";
-                    button.style.backgroundColor = "#4caf50";
-                    button.disabled = true;
+                    if (data.status === "Correct") {
+                        button.textContent = "Correct Answer";
+                        button.style.backgroundColor = "#4caf50";
+                        button.disabled = true;
+                    } else if (data.status === "Incorrect") {
+                        button.textContent = "Try Again";
+                        button.style.backgroundColor = "#dc3545";
+                        setTimeout(() => {
+                            button.textContent = "Submit Flag";
+                            button.style.backgroundColor = "";
+                        }, 3000);
+                    } else if (data.status === "already_solved") {
+                        button.textContent = "Already Solved";
+                        button.style.backgroundColor = "#4caf50";
+                        button.disabled = true;
+                    }
+                } catch (err) {
+                    console.error(err);
+                    alert("Error submitting flag.");
                 }
-            } catch (err) {
-                console.error(err);
-                alert("Error submitting flag.");
-            }
+            });
         });
     });
-});
 </script>
 
 {% else %}
