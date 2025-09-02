@@ -9,14 +9,38 @@
             <th>Score</th>
         </tr>
     </thead>
-    <tbody>
+    <tbody id="leaderboard-body">
         {% for player in players %}
         <tr>
             <td>{{ loop.index }}</td>
             <td>{{ player.username }}</td>
-            <td>{{ player.score }}</td>
+            <td>{{ player.total_score }}</td>
         </tr>
         {% endfor %}
     </tbody>
 </table>
+
+<script>
+function updateLeaderboard() {
+    fetch("{{ url_for('leaderboard_data') }}")
+        .then(response => response.json())
+        .then(data => {
+            const tbody = document.getElementById("leaderboard-body");
+            tbody.innerHTML = "";
+            data.forEach((player, index) => {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${player.username}</td>
+                    <td>${player.total_score}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        })
+        .catch(err => console.error("Error fetching leaderboard:", err));
+}
+
+// Update every 3 seconds
+setInterval(updateLeaderboard, 3000);
+</script>
 {% endblock %}
