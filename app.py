@@ -1,13 +1,38 @@
 import sqlite3
 from flask import Flask, render_template, session, request, redirect, url_for, flash, jsonify
+from werkzeug.security import generate_password_hash, check_password_hash
+from flask_wtf import FlaskForm, CSRFProtect
+from wtforms import StringField, PasswordField, SubmitField
+from wtforms.validators import Length, DataRequired, EqualTo
 
 app = Flask(__name__)
-app.secret_key = "secret"
+app.secret_key = "supersecretkey"
+csrf = CSRFProtect(app)
+
 DB_PATH = "shruutech_ctf.db"
 
-def get_challenges():
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SECURE'] = False
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+
+class LoginForm(FlaskForm):
+    username = StringField("Username", validators=[DataRequired(), Length(1, 50)])
+    password = PasswordField("Password", validators=[DataRequired(), Length(1, 128)])
+    submit = SubmitField("Login")
+
+class ChangePasswordForm(FlaskForm):
+    current_password = PasswordField("Current Password", validators=[DataRequired(), Length(1, 128)])
+    new_password = PasswordField("New Password", validators=[DataRequired(), Length(6, 128)])
+    confirm_password = PasswordField("Confirm New Password", validators=[DataRequired(), EqualTo('new_password', message="Passwords must match")])
+    submit = SubmitField("Change Password")
+
+def get_db():
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
+    return conn
+
+def get_challenges():
+    conn = get_db()
     cursor = conn.cursor()
     cursor.execute("SELECT id, title, hint, path_shown, points FROM challenges")
     rows = cursor.fetchall()
@@ -15,8 +40,7 @@ def get_challenges():
     return [dict(row) for row in rows]
 
 def get_challenge(challenge_id):
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
+    conn = get_db()
     cursor = conn.cursor()
     cursor.execute("SELECT id, title, points, flag FROM challenges WHERE id=?", (challenge_id,))
     row = cursor.fetchone()
@@ -31,8 +55,7 @@ def index():
     user_id = session.get("user_id")
     questions = get_challenges()
 
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
+    conn = get_db()
     cursor = conn.cursor()
     cursor.execute("""
         SELECT challenge_id 
@@ -55,52 +78,63 @@ def register():
 
     if request.method == "POST":
         username = request.form.get("username")
-        session["user_id"] = 1
+        password = request.form.get("password")
+
+        password_hash = generate_password_hash(password)
+
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute(
+            "INSERT INTO users (username, password_hash) VALUES (?, ?)",
+            (username, password_hash)
+        )
+        conn.commit()
+        conn.close()
+
+        session["user_id"] = cursor.lastrowid
         session["username"] = username
+
         return redirect(url_for("index"))
     return render_template("register.html")
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
-    if request.method == "POST":
-        username = request.form.get("username")
+    form = LoginForm()
+    if form.validate_on_submit():
+        username = form.username.data
+        password = form.password.data
 
         conn = sqlite3.connect(DB_PATH)
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
-        cursor.execute("SELECT id FROM users WHERE username=?", (username,))
+        cursor.execute("SELECT id, password_hash FROM users WHERE username=?", (username,))
         user = cursor.fetchone()
         conn.close()
 
-        if not user:
-            flash("User not found.", "danger")
+        if not user or not check_password_hash(user["password_hash"], password):
+            flash("Invalid username or password.", "danger")
             return redirect(url_for("login"))
 
         session["user_id"] = user["id"]
         session["username"] = username
         return redirect(url_for("index"))
 
-    return render_template("login.html")
+    return render_template("login.html", form=form)
 
 @app.route("/submit_flag/<int:challenge_id>", methods=["POST"])
 def submit_flag(challenge_id):
     if not session.get("user_id"):
-        flash("Please login first.", "warning")
-        return redirect(url_for("login"))
+        return jsonify({"status": "error", "message": "Please login first"}), 401
 
     user_id = session.get("user_id")
     submitted_flag = request.form.get("flag")
 
     challenge = get_challenge(challenge_id)
     if not challenge:
-        flash("Challenge not found.", "danger")
-        return redirect(url_for("index"))
+        return jsonify({"status": "error", "message": "Challenge not found"}), 404
 
-    status = "Correct" if submitted_flag == challenge["flag"] else "Incorrect"
-
-    conn = sqlite3.connect(DB_PATH)
+    conn = get_db()
     cursor = conn.cursor()
-
     cursor.execute(
         "SELECT 1 FROM submissions WHERE user_id=? AND challenge_id=? AND status='Correct'",
         (user_id, challenge_id)
@@ -108,23 +142,26 @@ def submit_flag(challenge_id):
     already_solved = cursor.fetchone()
 
     if already_solved:
-        flash("You have already solved this challenge.", "info")
-    else:
-        cursor.execute(
-            "INSERT INTO submissions (user_id, challenge_id, flag, status) VALUES (?, ?, ?, ?)",
-            (user_id, challenge_id, submitted_flag, status)
-        )
+        conn.close()
+        return jsonify({"status": "already_solved"})
 
-        if status == "Correct":
-            cursor.execute(
-                "UPDATE users SET total_score = total_score + ? WHERE id = ?",
-                (challenge["points"], user_id)
-            )
+    status = "Correct" if submitted_flag == challenge["flag"] else "Incorrect"
+
+    cursor.execute(
+        "INSERT INTO submissions (user_id, challenge_id, flag, status) VALUES (?, ?, ?, ?)",
+        (user_id, challenge_id, submitted_flag, status)
+    )
+
+    if status == "Correct":
+        cursor.execute(
+            "UPDATE users SET total_score = total_score + ? WHERE id = ?",
+            (challenge["points"], user_id)
+        )
 
     conn.commit()
     conn.close()
 
-    return redirect(url_for("index"))
+    return jsonify({"status": status})
 
 @app.route("/profile")
 def profile():
@@ -133,9 +170,7 @@ def profile():
         return redirect(url_for("login"))
     
     user_id = session.get("user_id")
-
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
+    conn = get_db()
     cursor = conn.cursor()
 
     cursor.execute("SELECT username, email, total_score FROM users WHERE id=?", (user_id,))
@@ -179,25 +214,46 @@ def profile():
 def leaderboard():
     if not session.get("user_id"):
         return "Please login to view leaderboard", 401
-    
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    cursor = conn.cursor()
-    cursor.execute("SELECT username, total_score FROM users ORDER BY total_score DESC LIMIT 3")
-    top_players = [dict(row) for row in cursor.fetchall()]
-    conn.close()
-
-    return render_template("leaderboard.html", players=top_players, current_page="leaderboard")
+    return render_template("leaderboard.html", current_page="leaderboard")
 
 @app.route("/leaderboard_data")
 def leaderboard_data():
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
+    conn = get_db()
     cursor = conn.cursor()
     cursor.execute("SELECT username, total_score FROM users ORDER BY total_score DESC LIMIT 3")
     top_players = [dict(row) for row in cursor.fetchall()]
     conn.close()
     return jsonify(top_players)
+
+@app.route("/change_password", methods=["GET", "POST"])
+def change_password():
+    if not session.get("user_id"):
+        flash("Please login first.", "warning")
+        return redirect(url_for("login"))
+
+    form = ChangePasswordForm()
+    user_id = session.get("user_id")
+
+    if form.validate_on_submit():
+        current = form.current_password.data
+        new = form.new_password.data
+
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute("SELECT password_hash FROM users WHERE id=?", (user_id,))
+        user = cursor.fetchone()
+
+        if not user or not check_password_hash(user["password_hash"], current):
+            flash("Current password is incorrect.", "danger")
+        else:
+            new_hash = generate_password_hash(new)
+            cursor.execute("UPDATE users SET password_hash=? WHERE id=?", (new_hash, user_id))
+            conn.commit()
+            flash("Password changed successfully.", "success")
+        conn.close()
+        return redirect(url_for("profile"))
+
+    return render_template("change_password.html", form=form, current_page="profile")
 
 @app.route("/logout")
 def logout():
