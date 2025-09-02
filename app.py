@@ -1,10 +1,8 @@
 import sqlite3
-from flask import Flask, render_template, session, request, redirect, url_for, flash
-from operator import itemgetter
+from flask import Flask, render_template, session, request, redirect, url_for, flash, jsonify
 
 app = Flask(__name__)
 app.secret_key = "secret"
-
 DB_PATH = "shruutech_ctf.db"
 
 def get_challenges():
@@ -185,12 +183,21 @@ def leaderboard():
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
-
     cursor.execute("SELECT username, total_score FROM users ORDER BY total_score DESC LIMIT 3")
     top_players = [dict(row) for row in cursor.fetchall()]
     conn.close()
 
     return render_template("leaderboard.html", players=top_players, current_page="leaderboard")
+
+@app.route("/leaderboard_data")
+def leaderboard_data():
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    cursor.execute("SELECT username, total_score FROM users ORDER BY total_score DESC LIMIT 3")
+    top_players = [dict(row) for row in cursor.fetchall()]
+    conn.close()
+    return jsonify(top_players)
 
 @app.route("/logout")
 def logout():
