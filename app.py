@@ -1,8 +1,11 @@
+import sqlite3
 from flask import Flask, render_template, session, request, redirect, url_for, flash
 from operator import itemgetter
 
 app = Flask(__name__)
 app.secret_key = "secret"
+
+DB_PATH = "shruutech_ctf.db"
 
 mock_players = [
     {"username": "Alice", "score": 5},
@@ -10,13 +13,20 @@ mock_players = [
     {"username": "Charlie", "score": 4},
 ]
 
+def get_challenges():
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, title, hint, path_shown, points FROM challenges")
+    rows = cursor.fetchall()
+    conn.close()
+    return [dict(row) for row in rows]
+
 @app.route("/")
 def index():
-    questions = [
-        {"id": 1, "description": "Question.", "feedback": None},
-        {"id": 2, "description": "Question.", "feedback": None},
-    ]
-
+    questions = get_challenges()
+    for q in questions:
+        q['feedback'] = None
     return render_template("index.html", questions=questions, current_page="index")
 
 @app.route("/register", methods=["GET", "POST"])
