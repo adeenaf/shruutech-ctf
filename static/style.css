@@ -128,3 +128,9 @@ table th {
     text-transform: uppercase;
 }
 
+.challenge-hint {
+    font-size: 0.85rem;
+    font-style: italic;
+    color: #f7c9af;
+    margin-bottom: 0.75rem;
+}
