@@ -22,11 +22,13 @@
                     Hint: {{ question.hint }}
                 </p>
 
-                <form method="POST" action="{{ url_for('submit_flag', question_id=question.id) }}">
+                <form method="POST" action="{{ url_for('submit_flag', challenge_id=question.id) }}">
                     <div class="d-flex gap-2 align-items-center">
                         <input type="text" name="flag" class="form-control flag-input flex-grow-1"
                             placeholder="Enter your flag" autocomplete="off" required>
-                        <button type="submit" class="btn-submit wide-btn">Submit Flag</button>
+                        <button type="submit" class="btn-submit wide-btn" {% if question.solved %}disabled{% endif %}>
+                            Submit Flag
+                        </button>
                     </div>
                 </form>
 

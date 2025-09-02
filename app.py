@@ -22,11 +22,20 @@ def get_challenges():
     conn.close()
     return [dict(row) for row in rows]
 
+def get_flag(challenge_id):
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("SELECT flag FROM challenges WHERE id=?", (challenge_id,))
+    flag = cursor.fetchone()[0]
+    conn.close()
+    return flag
+
 @app.route("/")
 def index():
     questions = get_challenges()
+    solved = session.get("solved_challenges", [])
     for q in questions:
-        q['feedback'] = None
+        q['solved'] = q['id'] in solved
     return render_template("index.html", questions=questions, current_page="index")
 
 @app.route("/register", methods=["GET", "POST"])
@@ -48,13 +57,18 @@ def login():
     return render_template("login.html")
 
 @app.route("/submit_flag/<int:question_id>", methods=["POST"])
-def submit_flag(question_id):
-    # Here you'll get the flag from the form
+def submit_flag(challenge_id):
     submitted_flag = request.form.get("flag")
+    correct_flag = get_flag(challenge_id)
 
-    # You can check it against the correct answer from the database
-    # For now, just flash a message
-    flash(f"Flag submitted for question {question_id}: {submitted_flag}", "info")
+    if submitted_flag == correct_flag:
+        flash("Correct Answer!", "success")
+        solved = session.get("solved_challenges", [])
+        if challenge_id not in solved:
+            solved.append(challenge_id)
+            session["solved_challenges"] = solved
+        else:
+            flash("Incorrect Answer.", "danger")
 
     return redirect(url_for("index"))
 
