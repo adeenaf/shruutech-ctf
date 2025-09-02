@@ -226,13 +226,31 @@ def profile():
 def leaderboard():
     if not session.get("user_id"):
         return "Please login to view leaderboard", 401
-    return render_template("leaderboard.html", current_page="leaderboard")
+
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT username, total_score
+        FROM users
+        ORDER BY total_score DESC
+        LIMIT 3
+    """)
+    top_players = [dict(row) for row in cursor.fetchall()]
+    conn.close()
+
+    return render_template("leaderboard.html", players=top_players, current_page="leaderboard")
+
 
 @app.route("/leaderboard_data")
 def leaderboard_data():
     conn = get_db()
     cursor = conn.cursor()
-    cursor.execute("SELECT username, total_score FROM users ORDER BY total_score DESC LIMIT 3")
+    cursor.execute("""
+        SELECT username, total_score
+        FROM users
+        ORDER BY total_score DESC
+        LIMIT 3
+    """)
     top_players = [dict(row) for row in cursor.fetchall()]
     conn.close()
     return jsonify(top_players)

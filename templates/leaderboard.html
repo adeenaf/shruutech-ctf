@@ -40,7 +40,6 @@ function updateLeaderboard() {
         .catch(err => console.error("Error fetching leaderboard:", err));
 }
 
-// Update every 3 seconds
-setInterval(updateLeaderboard, 3000);
+setInterval(updateLeaderboard, 10000);
 </script>
 {% endblock %}
