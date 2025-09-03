@@ -11,7 +11,7 @@ app = Flask(__name__)
 load_dotenv()
 app.secret_key = os.environ.get("SECRET_KEY")
 csrf = CSRFProtect(app)
-DB_PATH = os.environ.get("DB_PATH", "/var/data/shruutech_ctf.db")
+DB_PATH = os.environ.get("DB_PATH", "shruutech_ctf.db")
 
 app.config.update(
     SESSION_COOKIE_HTTPONLY=True,
@@ -190,4 +190,4 @@ def logout():
     return redirect(url_for("index"))
 
 if __name__ == "__main__":
-    app.run()
+    app.run(debug=True)

@@ -4,3 +4,4 @@ python-dotenv==0.21.0
 werkzeug==2.2.2
 WTForms==3.2.1
 gunicorn
+wtforms[email]
