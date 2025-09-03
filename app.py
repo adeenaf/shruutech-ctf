@@ -92,7 +92,7 @@ def register():
         try:
             query_db(
                 "INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)",
-                (form.username.data, form.email.data, generate_password_hash(form.password.data)),
+                (form.username.data, form.email.data, generate_password_hash(form.password.data, method="pbkdf2:sha256")),
                 commit=True)
         except sqlite3.IntegrityError:
             flash("Username or email already exists.", "danger")
@@ -178,7 +178,8 @@ def change_password():
         if not user or not check_password_hash(user["password_hash"], form.current_password.data):
             flash("Current password is incorrect.", "danger")
         else:
-            query_db("UPDATE users SET password_hash=? WHERE id=?", (generate_password_hash(form.new_password.data), user_id), commit=True)
+            query_db("UPDATE users SET password_hash=? WHERE id=?", (generate_password_hash(form.new_password.data, method="pbkdf2:sha256")
+, user_id), commit=True)
             flash("Password changed successfully.", "success")
         return redirect(url_for("profile"))
     return render_template("change_password.html", form=form, current_page="profile")
@@ -190,4 +191,4 @@ def logout():
     return redirect(url_for("index"))
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run()
