@@ -1,4 +1,3 @@
-# change SESSION_COOKIE_SECURE=False to True and remove debug=True later before deploying
 import os
 import sqlite3
 from dotenv import load_dotenv
@@ -12,11 +11,11 @@ app = Flask(__name__)
 load_dotenv()
 app.secret_key = os.environ.get("SECRET_KEY")
 csrf = CSRFProtect(app)
-DB_PATH = os.environ.get("DATABASE_URL", "shruutech_ctf.db")
+DB_PATH = os.environ.get("DB_URL", "shruutech_ctf.db")
 
 app.config.update(
     SESSION_COOKIE_HTTPONLY=True,
-    SESSION_COOKIE_SECURE=False,
+    SESSION_COOKIE_SECURE=True,
     SESSION_COOKIE_SAMESITE='Lax'
 )
 
@@ -191,4 +190,4 @@ def logout():
     return redirect(url_for("index"))
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run()
