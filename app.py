@@ -207,7 +207,6 @@ def logout():
 @app.route("/admin")
 @login_required
 def admin_panel():
-    # Only allow admins
     user_id = session["user_id"]
     user = query_db("SELECT is_admin FROM users WHERE id=?", (user_id,), one=True)
     if not user or user["is_admin"] != 1:
@@ -216,8 +215,6 @@ def admin_panel():
 
     users = [dict(u) for u in query_db("SELECT id, username, email, total_score FROM users")]
     challenges = [dict(c) for c in query_db("SELECT id, title, points FROM challenges")]
-
-    # For each user, get solved challenges
     user_solved = {}
     for u in users:
         solved = [r["challenge_id"] for r in query_db(
