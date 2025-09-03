@@ -135,3 +135,35 @@ table th {
     color: #f7c9af;
     margin-bottom: 0.75rem;
 }
+
+.admin-title {
+    font-family: 'Sinoreta PERSONAL USE', sans-serif;
+    font-size: 2rem;
+    color: #f7c9af;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.section-title {
+    font-size: 1.4rem;
+    margin-top: 2rem;
+    margin-bottom: 0.5rem;
+    color: #b66570;
+    border-left: 4px solid #ed9e6f;
+    padding-left: 0.5rem;
+}
+
+.solved-list {
+    list-style: none;
+    padding-left: 0.5rem;
+    margin: 0;
+}
+
+.solved-list li {
+    background-color: #512f5c;
+    margin: 0.2rem 0;
+    padding: 0.3rem 0.5rem;
+    border-radius: 0.3rem;
+    font-size: 0.9rem;
+    color: #f7c9af;
+}

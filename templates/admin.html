@@ -1,0 +1,61 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<h2 class="admin-title">Admin Panel</h2>
+
+<h3 class="section-title">Users</h3>
+<table>
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Username</th>
+      <th>Email</th>
+      <th>Score</th>
+      <th>Solved Challenges</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for u in users %}
+      <tr>
+        <td>{{ u.id }}</td>
+        <td>{{ u.username }}</td>
+        <td>{{ u.email }}</td>
+        <td>{{ u.total_score }}</td>
+        <td>
+          {% if user_solved[u.id] %}
+            <ul class="solved-list">
+              {% for c in challenges %}
+                {% if c.id in user_solved[u.id] %}
+                  <li>{{ c.title }} ({{ c.points }} pts)</li>
+                {% endif %}
+              {% endfor %}
+            </ul>
+          {% else %}
+            <em>None</em>
+          {% endif %}
+        </td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<h3 class="section-title">Challenges</h3>
+<table>
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Title</th>
+      <th>Points</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for c in challenges %}
+      <tr>
+        <td>{{ c.id }}</td>
+        <td>{{ c.title }}</td>
+        <td>{{ c.points }}</td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

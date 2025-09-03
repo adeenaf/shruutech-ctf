@@ -2,3 +2,4 @@
 .env
 .env.*
 *.sqlite3
+nfek.py

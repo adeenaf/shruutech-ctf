@@ -15,7 +15,7 @@ DB_PATH = "shruutech_ctf.db"
 
 app.config.update(
     SESSION_COOKIE_HTTPONLY=True,
-    SESSION_COOKIE_SECURE=True,
+    SESSION_COOKIE_SECURE=False,
     SESSION_COOKIE_SAMESITE='Lax'
 )
 
@@ -67,6 +67,20 @@ def login_required(func):
         if not session.get("user_id"):
             flash("Please login first.", "warning")
             return redirect(url_for("login"))
+        return func(*args, **kwargs)
+    return wrapper
+
+def admin_required(func):
+    from functools import wraps
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        if not session.get("user_id"):
+            flash("Please login first.", "warning")
+            return redirect(url_for("login"))
+        user = query_db("SELECT is_admin FROM users WHERE id=?", (session['user_id'],), one=True)
+        if not user or user["is_admin"] != 1:
+            flash("You are not authorized to view this page.", "danger")
+            return redirect(url_for("index"))
         return func(*args, **kwargs)
     return wrapper
 
@@ -190,5 +204,28 @@ def logout():
     flash("You have been logged out.", "success")
     return redirect(url_for("index"))
 
+@app.route("/admin")
+@login_required
+def admin_panel():
+    # Only allow admins
+    user_id = session["user_id"]
+    user = query_db("SELECT is_admin FROM users WHERE id=?", (user_id,), one=True)
+    if not user or user["is_admin"] != 1:
+        flash("Access denied.", "danger")
+        return redirect(url_for("index"))
+
+    users = [dict(u) for u in query_db("SELECT id, username, email, total_score FROM users")]
+    challenges = [dict(c) for c in query_db("SELECT id, title, points FROM challenges")]
+
+    # For each user, get solved challenges
+    user_solved = {}
+    for u in users:
+        solved = [r["challenge_id"] for r in query_db(
+            "SELECT challenge_id FROM submissions WHERE user_id=? AND status='Correct'", (u["id"],)
+        )]
+        user_solved[u["id"]] = solved
+
+    return render_template("admin.html", users=users, challenges=challenges, user_solved=user_solved)
+
 if __name__ == "__main__":
-    app.run()
+    app.run(debug=True)
