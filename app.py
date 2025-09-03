@@ -11,7 +11,7 @@ app = Flask(__name__)
 load_dotenv()
 app.secret_key = os.environ.get("SECRET_KEY")
 csrf = CSRFProtect(app)
-DB_PATH = os.environ.get("shruutech_ctf.db")
+DB_PATH = "shruutech_ctf.db"
 
 app.config.update(
     SESSION_COOKIE_HTTPONLY=True,
