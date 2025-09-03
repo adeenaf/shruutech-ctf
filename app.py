@@ -15,7 +15,7 @@ DB_PATH = "shruutech_ctf.db"
 
 app.config.update(
     SESSION_COOKIE_HTTPONLY=True,
-    SESSION_COOKIE_SECURE=False,
+    SESSION_COOKIE_SECURE=True,
     SESSION_COOKIE_SAMESITE='Lax'
 )
 
@@ -228,4 +228,4 @@ def admin_panel():
     return render_template("admin.html", users=users, challenges=challenges, user_solved=user_solved)
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run()
