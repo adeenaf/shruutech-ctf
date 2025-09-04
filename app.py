@@ -1,11 +1,12 @@
 import os
 import sqlite3
 from dotenv import load_dotenv
-from flask import Flask, render_template, session, request, redirect, url_for, flash, jsonify, send_file, abort, session
+from flask import Flask, render_template, session, request, redirect, url_for, flash, jsonify, send_file, abort
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_wtf import FlaskForm, CSRFProtect
 from wtforms import StringField, PasswordField, SubmitField
 from wtforms.validators import Length, DataRequired, EqualTo, Email
+import hmac
 
 app = Flask(__name__)
 load_dotenv()
@@ -137,13 +138,13 @@ def login():
 @login_required
 def submit_flag(challenge_id):
     user_id = session["user_id"]
-    flag = request.form.get("flag")
+    flag = request.form.get("flag", "").strip()
     challenge = get_challenge(challenge_id)
     if not challenge:
         return jsonify({"status": "error", "message": "Challenge not found"}), 404
     if query_db("SELECT 1 FROM submissions WHERE user_id=? AND challenge_id=? AND status='Correct'", (user_id, challenge_id), one=True):
         return jsonify({"status": "already_solved"})
-    status = "Correct" if flag == challenge["flag"] else "Incorrect"
+    status = "Correct" if hmac.compare_digest(flag.strip(), challenge["flag"]) else "Incorrect"
     query_db(
         "INSERT INTO submissions (user_id, challenge_id, flag, status) VALUES (?, ?, ?, ?)",
         (user_id, challenge_id, flag, status),
