@@ -1,7 +1,7 @@
 import os
 import sqlite3
 from dotenv import load_dotenv
-from flask import Flask, render_template, session, request, redirect, url_for, flash, jsonify
+from flask import Flask, render_template, session, request, redirect, url_for, flash, jsonify, send_file, abort, session
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_wtf import FlaskForm, CSRFProtect
 from wtforms import StringField, PasswordField, SubmitField
@@ -173,13 +173,51 @@ def profile():
 @app.route("/leaderboard")
 @login_required
 def leaderboard():
-    players = [dict(r) for r in query_db("SELECT username, total_score FROM users ORDER BY total_score DESC LIMIT 3")]
+    players = [dict(r) for r in query_db("""
+        SELECT u.username, u.total_score, MIN(t.timestamp) AS finish_time
+        FROM users u
+        JOIN (
+            SELECT s.user_id, s.timestamp,
+                SUM(c.points) OVER (
+                    PARTITION BY s.user_id 
+                    ORDER BY s.timestamp
+                    ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+                ) AS cumulative_score
+            FROM submissions s
+            JOIN challenges c ON s.challenge_id = c.id
+            WHERE s.status = 'Correct'
+        ) t
+        ON u.id = t.user_id
+        AND t.cumulative_score = u.total_score
+        GROUP BY u.id
+        ORDER BY u.total_score DESC, finish_time ASC
+        LIMIT 3
+    """)]
     return render_template("leaderboard.html", players=players, current_page="leaderboard")
 
 @app.route("/leaderboard_data")
 @login_required
 def leaderboard_data():
-    top_players = [dict(r) for r in query_db("SELECT username, total_score FROM users ORDER BY total_score DESC LIMIT 3")]
+    top_players = [dict(r) for r in query_db("""
+        SELECT u.username, u.total_score, MIN(t.timestamp) AS finish_time
+        FROM users u
+        JOIN (
+            SELECT s.user_id, s.timestamp,
+                SUM(c.points) OVER (
+                    PARTITION BY s.user_id 
+                    ORDER BY s.timestamp
+                    ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+                ) AS cumulative_score
+            FROM submissions s
+            JOIN challenges c ON s.challenge_id = c.id
+            WHERE s.status = 'Correct'
+        ) t
+        ON u.id = t.user_id
+        AND t.cumulative_score = u.total_score
+        GROUP BY u.id
+        ORDER BY u.total_score DESC, finish_time ASC
+        LIMIT 3
+    """)]
     return jsonify(top_players)
 
 @app.route("/change_password", methods=["GET", "POST"])
@@ -223,6 +261,16 @@ def admin_panel():
         user_solved[u["id"]] = solved
 
     return render_template("admin.html", users=users, challenges=challenges, user_solved=user_solved)
+
+@app.route("/download_db")
+@login_required
+def download_db():
+    user_id = session.get("user_id")
+    user = query_db("SELECT is_admin FROM users WHERE id=?", (user_id,), one=True)
+    if not user or user["is_admin"] != 1:
+        abort(403)
+
+    return send_file(DB_PATH, as_attachment=True)
 
 if __name__ == "__main__":
     app.run()
